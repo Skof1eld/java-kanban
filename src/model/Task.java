@@ -1,3 +1,5 @@
+package model;
+
 public class Task {
     private final String nameOfTheTask;
     private final String description;
@@ -8,7 +10,6 @@ public class Task {
         this.nameOfTheTask = nameOfTheTask;
         this.description = description;
         this.status = status;
-
     }
 
     public int getTaskId() {
@@ -45,4 +46,3 @@ public class Task {
                 '}';
     }
 }
-

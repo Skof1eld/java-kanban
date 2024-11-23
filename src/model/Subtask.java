@@ -1,3 +1,5 @@
+package model;
+
 import java.util.Objects;
 
 public class Subtask extends Task {
@@ -40,4 +42,3 @@ public class Subtask extends Task {
                 '}';
     }
 }
-

@@ -1,3 +1,11 @@
+import logic.TaskManager;
+import model.Epic;
+import model.Status;
+import model.Subtask;
+import model.Task;
+
+import java.util.ArrayList;
+
 public class Main {
 
     public static void main(String[] args) {
@@ -39,9 +47,8 @@ public class Main {
         reserveHotel.setStatus(Status.IN_PROGRESS);
         vacuuming.setStatus(Status.IN_PROGRESS);
 
-
-        taskManager.updateEpic(traveling);
-        taskManager.updateEpic(cleaner);
+        taskManager.updateStatusEpic(traveling);
+        taskManager.updateStatusEpic(cleaner);
 
         System.out.println(" -> Статусы после изменения <-");
         taskManager.printAllTypeTask();
@@ -53,7 +60,5 @@ public class Main {
 
         System.out.println(" !!! Оставшиеся задачи после удаления !!! ");
         taskManager.printAllTypeTask();
-
     }
 }
-
