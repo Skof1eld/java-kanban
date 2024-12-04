@@ -1,17 +1,16 @@
-import logic.TaskManager;
+import logic.InMemoryTaskManager;
 import model.Epic;
 import model.Status;
 import model.Subtask;
 import model.Task;
 
-import java.util.ArrayList;
 
 public class Main {
 
     public static void main(String[] args) {
         System.out.println("Поехали!");
 
-        TaskManager taskManager = new TaskManager();
+        InMemoryTaskManager taskManager = new InMemoryTaskManager();
 
         Task buyGas = new Task("Заправить машину", "Съездить на заправку", Status.NEW);
         Task callFriend = new Task("Позвонить другу", "Взять телефон", Status.NEW);
@@ -60,5 +59,6 @@ public class Main {
 
         System.out.println(" !!! Оставшиеся задачи после удаления !!! ");
         taskManager.printAllTypeTask();
+
     }
 }

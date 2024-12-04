@@ -3,19 +3,20 @@ package model;
 import java.util.Objects;
 
 public class Subtask extends Task {
-    private int subtaskId;
+    private int getEpicId;
 
-    public Subtask(String nameOfTheTask, String description, Status status, int subtaskId) {
+    public Subtask(String nameOfTheTask, String description, Status status, int getEpicId) {
         super(nameOfTheTask, description, status);
-        this.subtaskId = subtaskId;
+        this.getEpicId = getEpicId;
+
     }
 
-    public int subtaskId() {
-        return subtaskId;
+    public int getEpicId() {
+        return getEpicId;
     }
 
-    public void setSubtaskId(int subtaskId) {
-        this.subtaskId = subtaskId;
+    public void setEpicId(int getEpicId) {
+        this.getEpicId = getEpicId;
     }
 
     @Override
@@ -23,18 +24,18 @@ public class Subtask extends Task {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Subtask subtask = (Subtask) o;
-        return subtaskId == subtask.subtaskId;
+        return getEpicId == subtask.getEpicId;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(subtaskId);
+        return Objects.hashCode(getEpicId);
     }
 
     @Override
     public String toString() {
         return "Subtask{" +
-                "subtaskId=" + subtaskId +
+                "subtaskId=" + getEpicId +
                 ", nameOfTheTask='" + getNameOfTheTask() + '\'' +
                 ", description='" + getDescription() + '\'' +
                 ", status=" + getStatus() +
