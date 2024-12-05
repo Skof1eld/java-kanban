@@ -4,7 +4,7 @@ import model.Status;
 import model.Task;
 import org.junit.jupiter.api.Test;
 
-import java.util.ArrayList;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -30,7 +30,7 @@ class ManagersTest {
         Task buyGas = new Task("Заправить машину", "Съездить на заправку", Status.NEW);
         historyManager.add(buyGas);
 
-        ArrayList<Task> actualList = historyManager.getHistory();
+        List<Task> actualList = historyManager.getHistory();
         assertEquals(1, actualList.size());
     }
 }

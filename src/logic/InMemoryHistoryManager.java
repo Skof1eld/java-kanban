@@ -5,13 +5,15 @@ import model.Subtask;
 import model.Task;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class InMemoryHistoryManager implements HistoryManager {
-    private final ArrayList<Task> history = new ArrayList<>();
+    private final List<Task> history = new ArrayList<>();
 
+    // * добавил переменную в поле класса интерфейса, иначе 10 получается магическим числом, если правильно понимаю данное определение
     @Override
     public void add(Task task) {
-        if (history.size() == 10) {
+        if (history.size() == MAX_HISTORY_SIZE) {
             history.removeFirst();
         }
         history.add(copyTask(task));
@@ -22,14 +24,18 @@ public class InMemoryHistoryManager implements HistoryManager {
         if (task instanceof Subtask) {
             return new Subtask(task.getNameOfTheTask(), task.getDescription(), task.getStatus(), ((Subtask) task).getEpicId());
         } else if (task instanceof Epic) {
-            return new Epic(task.getNameOfTheTask(), task.getDescription());
+            Epic epicCopy = new Epic(task.getNameOfTheTask(), task.getDescription());
+            epicCopy.setTaskId(task.getTaskId());
+            return epicCopy;
         } else {
-            return new Task(task.getNameOfTheTask(), task.getDescription(), task.getStatus());
+            Task taskCopy = new Task(task.getNameOfTheTask(), task.getDescription(), task.getStatus());
+            taskCopy.setTaskId(task.getTaskId());
+            return taskCopy;
         }
     }
 
     @Override
-    public ArrayList<Task> getHistory() {  // возвращаем список
-        return new ArrayList<>(history);
+    public List<Task> getHistory() {  // возвращаем список
+        return history;
     }
 }

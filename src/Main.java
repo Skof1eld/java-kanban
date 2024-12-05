@@ -59,6 +59,5 @@ public class Main {
 
         System.out.println(" !!! Оставшиеся задачи после удаления !!! ");
         taskManager.printAllTypeTask();
-
     }
 }
