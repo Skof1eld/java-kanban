@@ -200,24 +200,24 @@ public class InMemoryTaskManager implements TaskManager {
 
     // получение списка всех задач, подзадач, эпиков
     @Override
-    public ArrayList<Task> getAllTasks() {
+    public List<Task> getAllTasks() {
         return new ArrayList<>(tasks.values());
     }
 
     @Override
-    public ArrayList<Epic> getAllEpics() {
+    public List<Epic> getAllEpics() {
         return new ArrayList<>(epics.values());
     }
 
     @Override
-    public ArrayList<Subtask> getAllSubtasks() {
+    public List<Subtask> getAllSubtasks() {
         return new ArrayList<>(subtasks.values());
     }
 
     // получение списка всех подзадач определенного Epic
     @Override
-    public ArrayList<Subtask> getAllSubtasksOfOneEpic(int id) {
-        ArrayList<Subtask> listSubtask = new ArrayList<>();
+    public List<Subtask> getAllSubtasksOfOneEpic(int id) {
+        List<Subtask> listSubtask = new ArrayList<>();
         Epic epic = epics.get(id);
         for (Integer subtaskIndex : epic.getSubtaskList()) {
             Subtask subtask = subtasks.get(subtaskIndex);

@@ -41,13 +41,13 @@ public interface TaskManager {
 
     void removeAllSubtask();
 
-    ArrayList<Task> getAllTasks();
+    List<Task> getAllTasks();
 
-    ArrayList<Epic> getAllEpics();
+    List<Epic> getAllEpics();
 
-    ArrayList<Subtask> getAllSubtasks();
+    List<Subtask> getAllSubtasks();
 
-    ArrayList<Subtask> getAllSubtasksOfOneEpic(int id);
+    List<Subtask> getAllSubtasksOfOneEpic(int id);
 
     List<Task> getHistory();
 }

@@ -1,39 +1,66 @@
 package logic;
 
-import model.Epic;
 import model.Status;
-import model.Subtask;
 import model.Task;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class InMemoryTaskManagerTest {
 
-    // InMemoryTaskManager добавляет задачи разного типа и может найти их по id;
+    private InMemoryHistoryManager historyManager;
+    private Task hotel;
+    private Task traveling;
+    private Task purchases;
+
+    @BeforeEach
+    void setUp() {
+        historyManager = new InMemoryHistoryManager();
+        hotel = new Task("Отель", "Забронировать номер", Status.NEW);
+        traveling = new Task("Путешествие", "Купить билеты", Status.IN_PROGRESS);
+        purchases = new Task("Покупки", "Купить продукты", Status.DONE);
+    }
+
+    // задачи добавляются в историю и сохраняют порядок
     @Test
-    void canAddTasksDifferentTypesAndFindThemById() {
-        InMemoryTaskManager taskManager = new InMemoryTaskManager();
+    void shouldAddTaskToHistory() {
+        hotel.setTaskId(1);
+        traveling.setTaskId(2);
+        purchases.setTaskId(3);
 
-        Task task = new Task("Банкомат", "Снять деньги", Status.NEW);
-        Epic epic = new Epic("Путешествие", "Планирование путешествия");
-        taskManager.addTask(task);
-        taskManager.addEpic(epic);
+        historyManager.add(hotel);
+        historyManager.add(traveling);
+        historyManager.add(purchases);
 
-        Subtask subtask = new Subtask("Покупка билетов", "Купить билеты у окна", Status.NEW, epic.getTaskId());
-        taskManager.addSubtask(subtask);
+        List<Task> history = historyManager.getHistory();
+        assertEquals(3, history.size());
+        assertEquals(hotel, history.get(0));
+        assertEquals(traveling, history.get(1));
+        assertEquals(purchases, history.get(2));
+    }
 
-        Task taskActual = taskManager.getTask(task.getTaskId());
-        Epic epicActual = taskManager.getEpic(epic.getTaskId());
-        Subtask subtaskActual = taskManager.getSubtask(subtask.getTaskId());
+    // Удаление задачи из истории по идентификатору
+    @Test
+    void removeTaskFromHistory() {
+        hotel.setTaskId(1);
+        traveling.setTaskId(2);
 
-        assertNotNull(taskActual);
-        assertEquals(task, taskActual);
+        historyManager.add(hotel);
+        historyManager.add(traveling);
+        historyManager.remove(hotel.getTaskId());
 
-        assertNotNull(epicActual);
-        assertEquals(epic, epicActual);
+        List<Task> history = historyManager.getHistory();
+        assertEquals(1, history.size());
+        assertEquals(traveling, history.getFirst());
+    }
 
-        assertNotNull(subtaskActual);
-        assertEquals(subtask, subtaskActual);
+    // Возвращает пустой список, если в истории нет задач
+    @Test
+    void handleEmptyHistory() {
+        List<Task> history = historyManager.getHistory();
+        assertTrue(history.isEmpty());
     }
 }

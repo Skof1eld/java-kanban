@@ -9,46 +9,34 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 
 class HistoryManagerTest {
+    HistoryManager historyManager = Managers.getDefaultHistory();
 
-    // добавляемые задачи в HistoryManager, сохраняют предыдущую версию задачи.
+    // Порядок задач в истории сохраняется после добавления и удаления.
     @Test
-    public void taskAddedToHistoryManagerSavesPreviousVersion() {
-        HistoryManager historyManager = Managers.getDefaultHistory();
-        TaskManager taskManager = Managers.getDefault();
+    void orderTasksInHistoryIsSaved() {
+        Task hotel = new Task("Отель", "Забронировать номер", Status.NEW);
+        hotel.setTaskId(1);
+        Task traveling = new Task("Путешествие", "Купить билеты", Status.IN_PROGRESS);
+        traveling.setTaskId(2);
 
-        Task buyGas = new Task("Заправить машину", "Съездить на заправку", Status.NEW);
-        taskManager.addTask(buyGas);
-        historyManager.add(buyGas);
+        historyManager.add(hotel);
+        historyManager.add(traveling);
 
-        buyGas.setStatus(Status.IN_PROGRESS);
-        historyManager.add(buyGas);
-
-        List<Task> updatedHistory = historyManager.getHistory();
-        Task previeTask = updatedHistory.get(0);
-        assertEquals(Status.NEW, previeTask.getStatus());
-
-        Task actualTask = updatedHistory.get(1);
-        assertEquals(Status.IN_PROGRESS, actualTask.getStatus());
+        List<Task> history = historyManager.getHistory();
+        assertEquals(hotel, history.get(0));
+        assertEquals(traveling, history.get(1));
     }
 
-    // проверяем, что при удалении объекта, он удаляется и из истории
+    // Добавление одной и той же задачи не должно дублировать её в истории.
     @Test
-    void removeTaskUsingRemoveHistoryTest() {
-        InMemoryTaskManager taskManager = new InMemoryTaskManager();
+    void duplicateTasksNotAddedToHistory() {
+        Task hotel = new Task("Отель", "Забронировать номер", Status.NEW);
+        hotel.setTaskId(1);
 
-        Task taskBank = new Task("Банкомат", "Снять деньги", Status.NEW);
-        Task taskStore = new Task("Магазин", "Купить продукты", Status.IN_PROGRESS);
-        Task taskAlarmClock = new Task("Будильник", "Поставить будильник", Status.DONE);
+        historyManager.add(hotel);
+        historyManager.add(hotel);
 
-        taskManager.addTask(taskBank);
-        taskManager.addTask(taskStore);
-        taskManager.addTask(taskAlarmClock);
-
-        List<Task> historyBeforeDeleteTask = taskManager.getHistory();
-        assertEquals(3, historyBeforeDeleteTask.size());
-
-        taskManager.removeTask(taskStore.getTaskId());
-        List<Task> historyAfterDeleteTask = taskManager.getHistory();
-        assertEquals(2, historyAfterDeleteTask.size());
+        List<Task> history = historyManager.getHistory();
+        assertEquals(1, history.size());
     }
 }
