@@ -1,41 +1,89 @@
 package logic;
 
-import model.Epic;
-import model.Subtask;
 import model.Task;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class InMemoryHistoryManager implements HistoryManager {
-    private final List<Task> history = new ArrayList<>();
+    private final Map<Integer, Node> history = new HashMap<>();
+    private Node head;
+    private Node tail;
 
-    // * добавил переменную в поле класса интерфейса, иначе 10 получается магическим числом, если правильно понимаю данное определение
+    // Узел двусвязного списка
+    private static class Node {
+        Task task;
+        Node next;
+        Node prev;
+
+        Node(Task task) {
+            this.task = task;
+        }
+    }
+
     @Override
     public void add(Task task) {
-        if (history.size() == MAX_HISTORY_SIZE) {
-            history.removeFirst();
+        if (task == null) {
+            return;
         }
-        history.add(copyTask(task));
+        remove(task.getTaskId());    // Удаляем задачу, если она уже есть в истории
+        linkLast(task);  // Добавляем задачу в конец списка
     }
 
-    // метод для сохранения истории задач в неизменном виде
-    public Task copyTask(Task task) {
-        if (task instanceof Subtask) {
-            return new Subtask(task.getNameOfTheTask(), task.getDescription(), task.getStatus(), ((Subtask) task).getEpicId());
-        } else if (task instanceof Epic) {
-            Epic epicCopy = new Epic(task.getNameOfTheTask(), task.getDescription());
-            epicCopy.setTaskId(task.getTaskId());
-            return epicCopy;
-        } else {
-            Task taskCopy = new Task(task.getNameOfTheTask(), task.getDescription(), task.getStatus());
-            taskCopy.setTaskId(task.getTaskId());
-            return taskCopy;
-        }
-    }
-
+    // Метод удаление задачи из истории по id
     @Override
-    public List<Task> getHistory() {  // возвращаем список
-        return history;
+    public void remove(int id) {
+        Node node = history.remove(id);
+        if (node != null) {
+            removeNode(node);
+        }
+    }
+
+    // Метод получения списка всех задач из связного списка
+    @Override
+    public List<Task> getHistory() {
+        return getTasks();
+    }
+
+    // Связывает задачу в конец списка
+    private void linkLast(Task task) {
+        Node newNode = new Node(task);
+        if (tail == null) {
+            head = newNode;
+            tail = newNode;
+        } else {
+            tail.next = newNode;
+            newNode.prev = tail;
+            tail = newNode;
+        }
+        history.put(task.getTaskId(), newNode);
+    }
+
+    // Удаляет узел из связного списка
+    private void removeNode(Node node) {
+        if (node.prev == null) {
+            head = node.next;
+        } else {
+            node.prev.next = node.next;
+        }
+
+        if (node.next == null) {
+            tail = node.prev;
+        } else {
+            node.next.prev = node.prev;
+        }
+    }
+
+    // Собирает задачи из двусвязного списка в ArrayList
+    private List<Task> getTasks() {
+        List<Task> tasks = new ArrayList<>();
+        Node current = head;
+        while (current != null) {
+            tasks.add(current.task);
+            current = current.next;
+        }
+        return tasks;
     }
 }
