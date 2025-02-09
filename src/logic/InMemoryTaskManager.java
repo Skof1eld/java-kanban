@@ -5,10 +5,8 @@ import model.Status;
 import model.Subtask;
 import model.Task;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.time.LocalDateTime;
+import java.util.*;
 
 public class InMemoryTaskManager implements TaskManager {
     private int generalId = 1;
@@ -20,6 +18,13 @@ public class InMemoryTaskManager implements TaskManager {
     //  методы добавления
     @Override
     public void addTask(Task task) {
+        // проверяем, не пересекается ли добавляемая задача с уже существующими
+        boolean hasOverlap = tasks.values().stream().anyMatch(existingTask -> overlappingTask(task, existingTask));
+
+        if (hasOverlap) {
+            System.out.println(" !!! Error: Задача пересекается с другой задачей по времени !!!");
+            return;
+        }
         task.setTaskId(generalId++);
         tasks.put(task.getTaskId(), task);
         historyManager.add(task);
@@ -27,6 +32,15 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public void addEpic(Epic epic) {
+        // проверяем пересечение эпика с задачами и подзадачами
+        boolean hasOverlap = epics.values().stream().anyMatch(existingEpic -> overlappingTask(epic, existingEpic)) ||
+                tasks.values().stream().anyMatch(existingTask -> overlappingTask(epic, existingTask)) ||
+                subtasks.values().stream().anyMatch(existingSubtask -> overlappingTask(epic, existingSubtask));
+
+        if (hasOverlap) {
+            System.out.println(" !!! Error: Эпик пересекается с другой задачей или подзадачей по времени !!!");
+            return;
+        }
         epic.setTaskId(generalId++);
         epics.put(epic.getTaskId(), epic);
     }
@@ -34,6 +48,15 @@ public class InMemoryTaskManager implements TaskManager {
     // Метод для добавления подзадачи
     @Override
     public void addSubtask(Subtask subtask) {
+        // проверяем пересечение подзадачи с задачами и эпиками
+        boolean hasOverlap = tasks.values().stream().anyMatch(existingTask -> overlappingTask(subtask, existingTask)) ||
+                epics.values().stream().anyMatch(existingEpic -> overlappingTask(subtask, existingEpic)) ||
+                subtasks.values().stream().anyMatch(existingSubtask -> overlappingTask(subtask, existingSubtask));
+
+        if (hasOverlap) {
+            System.out.println(" !!! Error: Подзадача пересекается с другой задачей или подзадачей по времени !!!");
+            return;
+        }
         subtask.setTaskId(generalId++);
 
         Epic epic = epics.get(subtask.getEpicId());
@@ -121,7 +144,7 @@ public class InMemoryTaskManager implements TaskManager {
         return historyManager.getHistory();
     }
 
-    /* Если я правильно понял замечание, то лучше создать отдельный метод по удалению задачи из списка истории */
+    // метод удаления задачи из списка истории
     public void removeHistory(int id) {
         List<Task> history = historyManager.getHistory();
         for (int i = 0; i < history.size(); i++) {
@@ -226,7 +249,7 @@ public class InMemoryTaskManager implements TaskManager {
         return listSubtask;
     }
 
-    // * Методы печати для проверки
+    // Методы печати для проверки
     public void printAllSubtaskOfTheOneEpic(int id) {
         Epic epic = epics.get(id);
         for (Integer subtask : epic.getSubtaskList()) {
@@ -248,5 +271,32 @@ public class InMemoryTaskManager implements TaskManager {
         for (Subtask subtask : subtasks.values()) {
             System.out.println(subtask);
         }
+    }
+
+    // метод проверки пересекаются ли две задачи по времени
+    @Override
+    public boolean overlappingTask(Task task1, Task task2) {
+
+        if (task1.getStartTime() == null || task2.getStartTime() == null) {
+            return false;
+        }
+
+        LocalDateTime task1Start = task1.getStartTime();
+        LocalDateTime task1End = task1.getEndTime() != null ? task1.getEndTime() : task1Start.plus(task1.getDuration());
+        LocalDateTime task2Start = task2.getStartTime();
+        LocalDateTime task2End = task2.getEndTime() != null ? task2.getEndTime() : task2Start.plus(task2.getDuration());
+        return (task1Start.isBefore(task2End) && task1End.isAfter(task2Start));
+    }
+
+    // метод сортировки задач по времени начала
+    @Override
+    public List<Task> getPrioritizedTasks() {
+        List<Task> allTasks = new ArrayList<>();
+        allTasks.addAll(tasks.values());
+        allTasks.addAll(epics.values());
+        allTasks.addAll(subtasks.values());
+
+        allTasks.sort(Comparator.comparing(Task::getStartTime));
+        return allTasks;
     }
 }

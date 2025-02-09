@@ -1,96 +1,50 @@
 package logic;
 
-import model.Epic;
+import java.io.File;
+import java.io.IOException;
+import java.time.Duration;
+import java.time.LocalDateTime;
+
 import model.Status;
-import model.Subtask;
 import model.Task;
 import org.junit.jupiter.api.Test;
 
-import java.io.File;
-import java.io.IOException;
-
 import static org.junit.jupiter.api.Assertions.*;
 
-class FileBackedTaskManagerTest {
+public class FileBackedTaskManagerTest extends TaskManagerTest<FileBackedTaskManager> {
+    private File file;
 
-    // Сохранение и загрузка пустого файла
-    @Test
-    void savingAndLoadEmptyFile() throws IOException {
-        File tempFile = File.createTempFile("test", ".csv");
-        tempFile.deleteOnExit();
-
-        FileBackedTaskManager taskManager = new FileBackedTaskManager(tempFile);
-
-        assertTrue(taskManager.getAllTasks().isEmpty());
-        assertTrue(taskManager.getAllEpics().isEmpty());
-        assertTrue(taskManager.getAllSubtasks().isEmpty());
-
-        taskManager.save();
-        FileBackedTaskManager uploadingData = FileBackedTaskManager.loadFromFile(tempFile);
-
-        assertTrue(uploadingData.getAllTasks().isEmpty());
-        assertTrue(uploadingData.getAllEpics().isEmpty());
-        assertTrue(uploadingData.getAllSubtasks().isEmpty());
+    @Override
+    public FileBackedTaskManager createTaskManager() {
+        try {
+            file = File.createTempFile("tasks", ".csv");
+            return new FileBackedTaskManager(file);
+        } catch (IOException e) {
+            throw new RuntimeException("Не удалось создать временный файл.", e);
+        }
     }
 
-    // Сохранение и загрузка нескольких задач
+    // сохранения и загрузки данных из файла
     @Test
-    void savingAndLoadMultipleTasks() throws IOException {
-        File tempFile = File.createTempFile("test", ".csv");
-        tempFile.deleteOnExit();
+    public void saveAndLoadFromFile() {
+        Task task = new Task("Task 1", "Description", Status.NEW, Duration.ofMinutes(30), LocalDateTime.now());
+        taskManager.addTask(task);
 
-        FileBackedTaskManager taskManager = new FileBackedTaskManager(tempFile);
+        assertDoesNotThrow(() -> taskManager.save());
 
-        Task purchases = new Task("Покупки", "Купить продукты", Status.NEW);
-        taskManager.addTask(purchases);
-
-        Epic traveling = new Epic("Путешествие", "Купить билеты");
-        taskManager.addEpic(traveling);
-
-        Subtask hotel = new Subtask("Отель", "Забронировать номер", Status.NEW, traveling.getTaskId());
-        taskManager.addSubtask(hotel);
-
-        taskManager.save();
-        FileBackedTaskManager uploadingData = FileBackedTaskManager.loadFromFile(tempFile);
-
-        assertEquals(1, uploadingData.getAllTasks().size());
-        assertEquals(1, uploadingData.getAllEpics().size());
-        assertEquals(1, uploadingData.getAllSubtasks().size());
-
-        Task loadedTask = uploadingData.getAllTasks().get(0);
-        assertEquals(purchases.getNameOfTheTask(), loadedTask.getNameOfTheTask());
-        assertEquals(purchases.getDescription(), loadedTask.getDescription());
-        assertEquals(purchases.getStatus(), loadedTask.getStatus());
-
-        Epic loadedEpic = uploadingData.getAllEpics().get(0);
-        assertEquals(traveling.getNameOfTheTask(), loadedEpic.getNameOfTheTask());
-        assertEquals(traveling.getDescription(), loadedEpic.getDescription());
-
-        Subtask loadedSubtask = uploadingData.getAllSubtasks().get(0);
-        assertEquals(hotel.getNameOfTheTask(), loadedSubtask.getNameOfTheTask());
-        assertEquals(hotel.getDescription(), loadedSubtask.getDescription());
-        assertEquals(hotel.getStatus(), loadedSubtask.getStatus());
-        assertEquals(hotel.getEpicId(), loadedSubtask.getEpicId());
+        FileBackedTaskManager loadedManager = FileBackedTaskManager.loadFromFile(file);
+        Task loadedTask = loadedManager.getTask(task.getTaskId());
+        assertNotNull(loadedTask);
+        assertEquals(task, loadedTask);
     }
 
-    // "Сохранение и загрузка эпика без подзадач
+    // проверка на перехват исключения если файл не существует
     @Test
-    void savingAndLoadEmptyEpic() throws IOException {
-        File tempFile = File.createTempFile("test", ".csv");
-        tempFile.deleteOnExit();
+    public void testLoadFromFileWithInvalidFile() {
+        File noFile = new File("the_file_does_not_exist.csv");   // файл не существует
 
-        FileBackedTaskManager taskManager = new FileBackedTaskManager(tempFile);
-
-        Epic gasStation = new Epic("Заправка", "Заправить машину");
-        taskManager.addEpic(gasStation);
-
-        taskManager.save();
-        FileBackedTaskManager uploadingData = FileBackedTaskManager.loadFromFile(tempFile);
-
-        assertEquals(1, uploadingData.getAllEpics().size());
-        Epic loadedEpic = uploadingData.getAllEpics().get(0);
-        assertEquals(gasStation.getNameOfTheTask(), loadedEpic.getNameOfTheTask());
-        assertEquals(gasStation.getDescription(), loadedEpic.getDescription());
-        assertTrue(uploadingData.getAllSubtasks().isEmpty());
+        assertThrows(FileBackedTaskManager.ManagerSaveException.class, () -> {
+            FileBackedTaskManager.loadFromFile(noFile);
+        });
     }
 }

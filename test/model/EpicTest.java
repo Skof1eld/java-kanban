@@ -5,11 +5,12 @@ import logic.Managers;
 import logic.TaskManager;
 import org.junit.jupiter.api.Test;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class EpicTest {
-    /* так как требуется сравнение только по ID, переопределил метод Equals в классе Task, который сравнивает только ID,
-         не знаю насколько это правильно */
 
     // наследники класса Task (Epic) равны друг другу, если равен их id;
     @Test
@@ -31,10 +32,42 @@ class EpicTest {
     void epicCannotBeAddedToItselfAsSubtask() {
         TaskManager taskManager = Managers.getDefault();
         Epic epic = new Epic("Путешествие", "Планирование путешествия");
-        Subtask subtask = new Subtask("Покупка билетов", "Купить билеты у окна", Status.NEW, epic.getTaskId());
+        Subtask subtask = new Subtask("Покупка билетов", "Купить билеты у окна", Status.NEW,
+                Duration.ofMinutes(30), LocalDateTime.now(), epic.getTaskId());
         taskManager.addEpic(epic);
         taskManager.addSubtask(subtask);
 
         assertEquals(0, epic.getSubtaskList().size());
+    }
+
+    // расчёт статуса Epic
+    @Test
+    public void calculatingEpicStatus() {
+        TaskManager task = new InMemoryTaskManager();
+        Epic epic = new Epic("Epic 1", "Description");
+        task.addEpic(epic);
+
+        // подзадачи со статусом NEW
+        Subtask subtask1 = new Subtask("Subtask 1", "Description", Status.NEW,
+                Duration.ofMinutes(30), LocalDateTime.now(), epic.getTaskId());
+        Subtask subtask2 = new Subtask("Subtask 2", "Description", Status.NEW,
+                Duration.ofMinutes(30), LocalDateTime.now().plusHours(1), epic.getTaskId());
+        task.addSubtask(subtask1);
+        task.addSubtask(subtask2);
+        assertEquals(Status.NEW, epic.getStatus());
+
+        subtask1.setStatus(Status.DONE);  // подзадачи со статусом DONE
+        subtask2.setStatus(Status.DONE);
+        task.updateSubtask(subtask1);
+        task.updateSubtask(subtask2);
+        assertEquals(Status.DONE, epic.getStatus());
+
+        subtask1.setStatus(Status.NEW);  // подзадачи со статусами NEW и DONE
+        task.updateSubtask(subtask1);
+        assertEquals(Status.IN_PROGRESS, epic.getStatus());
+
+        subtask1.setStatus(Status.IN_PROGRESS);  // подзадачи со статусом IN_PROGRESS
+        task.updateSubtask(subtask1);
+        assertEquals(Status.IN_PROGRESS, epic.getStatus());
     }
 }

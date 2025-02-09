@@ -49,4 +49,8 @@ public interface TaskManager {
     List<Subtask> getAllSubtasksOfOneEpic(int id);
 
     List<Task> getHistory();
+
+    boolean overlappingTask(Task task1, Task task2);
+
+    List<Task> getPrioritizedTasks();
 }
