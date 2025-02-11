@@ -1,7 +1,5 @@
 package model;
 
-import logic.InMemoryTaskManager;
-
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
