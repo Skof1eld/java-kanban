@@ -4,6 +4,8 @@ import model.Epic;
 import model.Subtask;
 import model.Task;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.List;
 
 public interface TaskManager {
@@ -53,4 +55,10 @@ public interface TaskManager {
     boolean overlappingTask(Task task1, Task task2);
 
     List<Task> getPrioritizedTasks();
+
+    Duration getDuration(Epic epic);
+
+    LocalDateTime getStartTime(Epic epic);
+
+    void getEndTime(Epic epic);
 }

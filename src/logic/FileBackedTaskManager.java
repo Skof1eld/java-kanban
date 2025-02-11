@@ -113,7 +113,6 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
 
     // Сохранение задачи в строку
     private String taskToString(Task task) {
-
         if (task instanceof Epic epic) {
             return String.format("%d,EPIC,%s,%s,%s,%s,%s",
                     epic.getTaskId(),
@@ -159,7 +158,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
                 }
 
                 int id = Integer.parseInt(fields[0]);
-                String type = fields[1];
+                TypeTask typeTask = TypeTask.valueOf(fields[1]);
                 String name = fields[2];
                 Status status = Status.valueOf(fields[3]);
                 String description = fields[4];
@@ -173,23 +172,21 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
                  * то epic поле должно быть только у subtask, у task и epic нет этого поля, поэтому индексы могут сбиваться,
                  * корректируем индексы в зависимости от типа задачи, что бы каждое поля правильно парсилось из файла.
                  */
-                switch (type) {
-                    case "TASK" -> {
+                switch (typeTask) {
+                    case TASK -> {
                         duration = Duration.ofMinutes(Long.parseLong(fields[5]));
                         startTime = LocalDateTime.parse(fields[6]);
                     }
-                    case "SUBTASK" -> {
+                    case SUBTASK -> {
                         epicId = Integer.parseInt(fields[5]);
                         duration = Duration.ofMinutes(Long.parseLong(fields[6]));
                         startTime = LocalDateTime.parse(fields[7]);
                     }
                 }
 
-                Task task;
-                TypeTask typeTask = TypeTask.valueOf(type);
                 switch (typeTask) {
                     case TASK:
-                        task = new Task(name, description, status, duration, startTime);
+                        Task task = new Task(name, description, status, duration, startTime);
                         task.setTaskId(id);
                         addTask(task);
                         break;

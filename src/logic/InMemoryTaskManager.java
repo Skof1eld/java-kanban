@@ -5,6 +5,7 @@ import model.Status;
 import model.Subtask;
 import model.Task;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.*;
 
@@ -14,6 +15,10 @@ public class InMemoryTaskManager implements TaskManager {
     protected final Map<Integer, Epic> epics = new HashMap<>();
     protected final Map<Integer, Subtask> subtasks = new HashMap<>();
     private final HistoryManager historyManager = new InMemoryHistoryManager();
+
+    // * сортируем задачи по времени начала и добавляем задачи без startTime в конец списка
+    private final TreeSet<Task> prioritizedTasks = new TreeSet<>(Comparator.comparing(Task::getStartTime,
+            Comparator.nullsLast(Comparator.naturalOrder())));
 
     //  методы добавления
     @Override
@@ -27,6 +32,7 @@ public class InMemoryTaskManager implements TaskManager {
         }
         task.setTaskId(generalId++);
         tasks.put(task.getTaskId(), task);
+        prioritizedTasks.add(task);
         historyManager.add(task);
     }
 
@@ -43,6 +49,7 @@ public class InMemoryTaskManager implements TaskManager {
         }
         epic.setTaskId(generalId++);
         epics.put(epic.getTaskId(), epic);
+        prioritizedTasks.add(epic);
     }
 
     // Метод для добавления подзадачи
@@ -70,6 +77,7 @@ public class InMemoryTaskManager implements TaskManager {
         }
         epic.getSubtaskList().add(subtask.getTaskId());
         subtasks.put(subtask.getTaskId(), subtask);
+        prioritizedTasks.add(subtask);
         updateStatusEpic(epic);
     }
 
@@ -77,18 +85,23 @@ public class InMemoryTaskManager implements TaskManager {
     @Override
     public void updateTask(Task task) {
         tasks.put(task.getTaskId(), task);
+        prioritizedTasks.add(task);
     }
 
     @Override
     public void updateEpic(Epic epic) {
         epics.put(epic.getTaskId(), epic);
+        prioritizedTasks.add(epic);
     }
 
     @Override
     public void updateSubtask(Subtask subtask) {
         subtasks.put(subtask.getTaskId(), subtask);
+        prioritizedTasks.add(subtask);
         Epic epic = epics.get(subtask.getEpicId());
-        updateStatusEpic(epic);
+        if (epic != null) {
+            updateStatusEpic(epic);
+        }
     }
 
     @Override
@@ -159,30 +172,41 @@ public class InMemoryTaskManager implements TaskManager {
     // методы удаления по идентификатору
     @Override
     public void removeTask(int id) {
-        tasks.remove(id);
-        removeHistory(id);  // * удаление из истории
+        Task task = tasks.remove(id);
+        if (task != null) {
+            prioritizedTasks.remove(task);
+        }
+        removeHistory(id);
     }
 
     @Override
     public void removeEpic(int id) {
-        Epic epic = epics.get(id);
+        Epic epic = epics.remove(id);
         if (epic != null) {
             for (Integer subtaskId : epic.getSubtaskList()) {
-                subtasks.remove(subtaskId);
-                removeHistory(subtaskId);  // * удаление из истории
+                Subtask subtask = subtasks.remove(subtaskId);
+                if (subtask != null) {
+                    prioritizedTasks.remove(subtask);
+                    removeHistory(subtaskId);
+                }
             }
+            prioritizedTasks.remove(epic);
         }
-        epics.remove(id);
+        removeHistory(id);
     }
 
     @Override
     public void removeSubtask(int id) {
-        Subtask subtask = subtasks.get(id);
-        Epic epic = epics.get(subtask.getEpicId());
-        epic.getSubtaskList().remove((Integer) id);
-        subtasks.remove(id);
-        updateStatusEpic(epic);
-        removeHistory(id); // * удаление из истории
+        Subtask subtask = subtasks.remove(id);
+        if (subtask != null) {
+            prioritizedTasks.remove(subtask);
+            Epic epic = epics.get(subtask.getEpicId());
+            if (epic != null) {
+                epic.getSubtaskList().remove((Integer) id);
+                updateStatusEpic(epic);
+            }
+        }
+        removeHistory(id);
     }
 
     // методы удаления всех задач
@@ -291,12 +315,50 @@ public class InMemoryTaskManager implements TaskManager {
     // метод сортировки задач по времени начала
     @Override
     public List<Task> getPrioritizedTasks() {
-        List<Task> allTasks = new ArrayList<>();
-        allTasks.addAll(tasks.values());
-        allTasks.addAll(epics.values());
-        allTasks.addAll(subtasks.values());
+        return new ArrayList<>(prioritizedTasks);
+    }
 
-        allTasks.sort(Comparator.comparing(Task::getStartTime));
-        return allTasks;
+    // вычисление общей продолжительности Epic задачи
+    @Override
+    public Duration getDuration(Epic epic) {
+        Duration totalDuration = Duration.ZERO;
+        for (Integer subtaskId : epic.getSubtaskList()) {
+            Subtask subtask = subtasks.get(subtaskId);
+            if (subtask != null && subtask.getDuration() != null) {
+                totalDuration = totalDuration.plus(subtask.getDuration());
+            }
+        }
+        return totalDuration;
+    }
+
+    // определение времени начала задачи
+    @Override
+    public LocalDateTime getStartTime(Epic epic) {
+        LocalDateTime earliestStart = null;
+        for (Integer subtaskId : epic.getSubtaskList()) {
+            Subtask subtask = subtasks.get(subtaskId);
+            if (subtask != null && subtask.getStartTime() != null) {
+                if (earliestStart == null || subtask.getStartTime().isBefore(earliestStart)) {
+                    earliestStart = subtask.getStartTime();
+                }
+            }
+        }
+        return earliestStart;
+    }
+
+    // определение времени завершения задачи
+    @Override
+    public void getEndTime(Epic epic) {
+        LocalDateTime lastEnd = null;
+        for (Integer subtaskId : epic.getSubtaskList()) {
+            Subtask subtask = subtasks.get(subtaskId);
+            if (subtask != null) {
+                LocalDateTime subtaskEnd = subtask.getEndTime();
+                if (subtaskEnd != null && (lastEnd == null || subtaskEnd.isAfter(lastEnd))) {
+                    lastEnd = subtaskEnd;
+                }
+            }
+        }
+        epic.setEndTime(lastEnd);
     }
 }

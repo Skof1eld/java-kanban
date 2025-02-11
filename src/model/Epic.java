@@ -10,11 +10,12 @@ import java.util.Objects;
 
 public class Epic extends Task {
     private List<Integer> subtaskList;
-    private final InMemoryTaskManager taskManager = new InMemoryTaskManager();
+    private LocalDateTime endTime;
 
     public Epic(String nameOfTheTask, String description) {
         super(nameOfTheTask, description, Status.NEW, Duration.ZERO, null);
         this.subtaskList = new ArrayList<>();
+        this.endTime = null;
     }
 
     public void setSubtaskList(List<Integer> subtaskList) {
@@ -25,52 +26,12 @@ public class Epic extends Task {
         return subtaskList;
     }
 
-    // вычисление общей продолжительности Epic задачи
-    @Override
-    public Duration getDuration() {
-        Duration totalDuration = Duration.ZERO;
-        for (Integer subtaskId : subtaskList) {
-            Subtask subtask = getSubtaskById(subtaskId);
-            if (subtask != null && subtask.getDuration() != null) {
-                totalDuration = totalDuration.plus(subtask.getDuration());
-            }
-        }
-        return totalDuration;
-    }
-
-    // определение времени завершения Epic задачи
-    @Override
     public LocalDateTime getEndTime() {
-        LocalDateTime lastResult = null;
-        for (Integer subtaskId : subtaskList) {
-            Subtask subtask = getSubtaskById(subtaskId);
-            if (subtask != null) {
-                LocalDateTime subtaskEnd = subtask.getEndTime();
-                if (subtaskEnd != null && (lastResult == null || subtaskEnd.isAfter(lastResult))) {
-                    lastResult = subtaskEnd;
-                }
-            }
-        }
-        return lastResult;
+        return endTime;
     }
 
-    // определение времени начала Epic
-    @Override
-    public LocalDateTime getStartTime() {
-        LocalDateTime earlieStart = null;
-        for (Integer subtaskId : subtaskList) {
-            Subtask subtask = getSubtaskById(subtaskId);
-            if (subtask != null && subtask.getStartTime() != null) {
-                if (earlieStart == null || subtask.getStartTime().isBefore(earlieStart)) {
-                    earlieStart = subtask.getStartTime();
-                }
-            }
-        }
-        return earlieStart;
-    }
-
-    private Subtask getSubtaskById(int subtaskId) {
-        return taskManager.getSubtask(subtaskId);
+    public void setEndTime(LocalDateTime endTime) {
+        this.endTime = endTime;
     }
 
     @Override
