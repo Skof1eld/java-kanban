@@ -4,39 +4,52 @@ import model.Status;
 import model.Task;
 import org.junit.jupiter.api.Test;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class HistoryManagerTest {
-    HistoryManager historyManager = Managers.getDefaultHistory();
+public class HistoryManagerTest {
+    private final InMemoryHistoryManager historyManager = new InMemoryHistoryManager();
 
-    // Порядок задач в истории сохраняется после добавления и удаления.
     @Test
-    void orderTasksInHistoryIsSaved() {
-        Task hotel = new Task("Отель", "Забронировать номер", Status.NEW);
-        hotel.setTaskId(1);
-        Task traveling = new Task("Путешествие", "Купить билеты", Status.IN_PROGRESS);
-        traveling.setTaskId(2);
-
-        historyManager.add(hotel);
-        historyManager.add(traveling);
-
-        List<Task> history = historyManager.getHistory();
-        assertEquals(hotel, history.get(0));
-        assertEquals(traveling, history.get(1));
+    public void emptyHistory() {
+        assertTrue(historyManager.getHistory().isEmpty());
     }
 
-    // Добавление одной и той же задачи не должно дублировать её в истории.
     @Test
-    void duplicateTasksNotAddedToHistory() {
-        Task hotel = new Task("Отель", "Забронировать номер", Status.NEW);
-        hotel.setTaskId(1);
+    public void addAndRemoveFromHistory() {
+        Task task1 = new Task("Task 1", "Description",
+                Status.NEW, Duration.ofMinutes(30), LocalDateTime.now());
+        Task task2 = new Task("Task 2", "Description",
+                Status.NEW, Duration.ofMinutes(30), LocalDateTime.now().plusHours(1));
+        historyManager.add(task1);
+        historyManager.add(task2);
 
-        historyManager.add(hotel);
-        historyManager.add(hotel);
+        // Проверяем, что задачи добавлены
+        assertEquals(2, historyManager.getHistory().size());
 
+        // Удаление из начала
+        historyManager.remove(task1.getTaskId());
         List<Task> history = historyManager.getHistory();
         assertEquals(1, history.size());
+        assertEquals(task2, history.get(0));
+
+        // Удаление из середины/конца
+        historyManager.add(task1);
+        historyManager.remove(task2.getTaskId());
+        history = historyManager.getHistory();
+        assertEquals(1, history.size());
+        assertEquals(task1, history.get(0));
+    }
+
+    @Test
+    public void duplicateTasksInHistory() {
+        Task task = new Task("Task 1", "Description",
+                Status.NEW, Duration.ofMinutes(30), LocalDateTime.now());
+        historyManager.add(task);
+        historyManager.add(task);
+        assertEquals(1, historyManager.getHistory().size());
     }
 }

@@ -28,8 +28,10 @@ public class InMemoryHistoryManager implements HistoryManager {
         if (task == null) {
             return;
         }
-        remove(task.getTaskId());    // Удаляем задачу, если она уже есть в истории
-        linkLast(task);  // Добавляем задачу в конец списка
+        if (history.containsKey(task.getTaskId())) {  // Удаляем задачу, если она уже есть в истории
+            remove(task.getTaskId());
+        }
+        linkLast(task);
     }
 
     // Метод удаление задачи из истории по id
@@ -52,12 +54,11 @@ public class InMemoryHistoryManager implements HistoryManager {
         Node newNode = new Node(task);
         if (tail == null) {
             head = newNode;
-            tail = newNode;
         } else {
             tail.next = newNode;
             newNode.prev = tail;
-            tail = newNode;
         }
+        tail = newNode;
         history.put(task.getTaskId(), newNode);
     }
 
