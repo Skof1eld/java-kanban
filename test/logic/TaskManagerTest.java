@@ -11,20 +11,20 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 
 public abstract class TaskManagerTest<T extends TaskManager> {
-    public T taskManager;
+    public T TaskManager;
 
     public abstract T createTaskManager();
 
     @BeforeEach
     public void setUp() {
-        taskManager = createTaskManager();
+        TaskManager = createTaskManager();
     }
 
     @Test
     public void addAndGetTask() {
         Task task = new Task("Task 1", "Description", Status.NEW, Duration.ofMinutes(30), LocalDateTime.now());
-        taskManager.addTask(task);
-        Task retrievedTask = taskManager.getTask(task.getTaskId());
+        TaskManager.addTask(task);
+        Task retrievedTask = TaskManager.getTask(task.getTaskId());
         assertNotNull(retrievedTask);
         assertEquals(task, retrievedTask);
     }
@@ -32,15 +32,15 @@ public abstract class TaskManagerTest<T extends TaskManager> {
     @Test
     public void addAndGetEpic() {
         Epic epic = new Epic("Epic 1", "Description");
-        taskManager.addEpic(epic);
-        Epic retrievedEpic = taskManager.getEpic(epic.getTaskId());
+        TaskManager.addEpic(epic);
+        Epic retrievedEpic = TaskManager.getEpic(epic.getTaskId());
         assertNotNull(retrievedEpic);
         assertEquals(epic, retrievedEpic);
     }
 
     @Test
     public void addAndGetSubtask() {
-        TaskManager task = new InMemoryTaskManager();
+        logic.TaskManager task = new InMemoryTaskManager();
         Epic epic = new Epic("Epic 1", "Description");
         task.addEpic(epic);
         Subtask subtask = new Subtask("Subtask 1", "Description",
@@ -55,14 +55,15 @@ public abstract class TaskManagerTest<T extends TaskManager> {
     public void updateTaskStatus() {
         Task task = new Task("Task 1", "Description",
                 Status.NEW, Duration.ofMinutes(30), LocalDateTime.now());
-        taskManager.addTask(task);
+        TaskManager.addTask(task);
         task.setStatus(Status.IN_PROGRESS);
-        taskManager.updateTask(task);
-        assertEquals(Status.IN_PROGRESS, taskManager.getTask(task.getTaskId()).getStatus());
+        TaskManager.updateTask(task);
+        assertEquals(Status.IN_PROGRESS, TaskManager.getTask(task.getTaskId()).getStatus());
     }
 
     @Test
     public void removeTask() {
+        TaskManager taskManager = Managers.getDefault();
         Task task = new Task("Task 1", "Description",
                 Status.NEW, Duration.ofMinutes(30), LocalDateTime.now());
         taskManager.addTask(task);
@@ -72,6 +73,7 @@ public abstract class TaskManagerTest<T extends TaskManager> {
 
     @Test
     public void removeEpic() {
+        TaskManager taskManager = Managers.getDefault();
         Epic epic = new Epic("Epic 1", "Description");
         taskManager.addEpic(epic);
         taskManager.removeEpic(epic.getTaskId());
@@ -80,7 +82,7 @@ public abstract class TaskManagerTest<T extends TaskManager> {
 
     @Test
     public void removeSubtask() {
-        TaskManager task = new InMemoryTaskManager();
+        logic.TaskManager task = Managers.getDefault();
         Epic epic = new Epic("Epic 1", "Description");
         task.addEpic(epic);
         Subtask subtask = new Subtask("Subtask 1", "Description",
@@ -92,16 +94,18 @@ public abstract class TaskManagerTest<T extends TaskManager> {
 
     @Test
     public void getHistory() {
+        TaskManager taskManager = Managers.getDefault();
         Task task = new Task("Task 1", "Description", Status.NEW, Duration.ofMinutes(30), LocalDateTime.now());
         taskManager.addTask(task);
         taskManager.getTask(task.getTaskId());
         List<Task> history = taskManager.getHistory();
         assertEquals(1, history.size());
-        assertEquals(task, history.get(0));
+        assertEquals(task, history.getFirst());
     }
 
     @Test
     public void checkingIntersectionOfIntervals() {
+        TaskManager taskManager = Managers.getDefault();
         Task task1 = new Task("Task 1", "Description",
                 Status.NEW, Duration.ofMinutes(30), LocalDateTime.now());
         Task task2 = new Task("Task 2", "Description",
@@ -114,7 +118,7 @@ public abstract class TaskManagerTest<T extends TaskManager> {
     // вычисление общей продолжительности эпика
     @Test
     public void getDurationForEpic() {
-
+        TaskManager taskManager = Managers.getDefault();
         Epic epic = new Epic("Epic 1", "Description for Epic 1");
         taskManager.addEpic(epic);
 
@@ -137,7 +141,7 @@ public abstract class TaskManagerTest<T extends TaskManager> {
     //  время начала эпика должно быть равным самой ранней подзадачи
     @Test
     public void getStartTimeForEpic() {
-
+        TaskManager taskManager = Managers.getDefault();
         Epic epic = new Epic("Epic 1", "Description Epic");
         taskManager.addEpic(epic);
 
@@ -160,6 +164,7 @@ public abstract class TaskManagerTest<T extends TaskManager> {
     //  время начала эпика должно быть равным самой поздней подзадачи
     @Test
     public void getEndTimeForEpic() {
+        TaskManager taskManager = Managers.getDefault();
         Epic epic = new Epic("Epic 1", "Description Epic");
         taskManager.addEpic(epic);
 

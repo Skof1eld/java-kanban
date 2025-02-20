@@ -24,61 +24,73 @@ public class InMemoryTaskManager implements TaskManager {
     @Override
     public void addTask(Task task) {
         // проверяем, не пересекается ли добавляемая задача с уже существующими
-        boolean hasOverlap = tasks.values().stream().anyMatch(existingTask -> overlappingTask(task, existingTask));
+        try {
+            boolean hasOverlap = tasks.values().stream().anyMatch(existingTask -> overlappingTask(task, existingTask));
 
-        if (hasOverlap) {
-            System.out.println(" !!! Error: Задача пересекается с другой задачей по времени !!!");
-            return;
+            if (hasOverlap) {
+                System.out.println(" !!! Error: Задача пересекается с другой задачей по времени !!!");
+                return;
+            }
+            task.setTaskId(generalId++);
+            tasks.put(task.getTaskId(), task);
+            prioritizedTasks.add(task);
+            historyManager.add(task);
+        } catch (Exception e) {
+            System.out.println("Ошибка при добавлении задачи: " + e.getMessage());
         }
-        task.setTaskId(generalId++);
-        tasks.put(task.getTaskId(), task);
-        prioritizedTasks.add(task);
-        historyManager.add(task);
     }
 
     @Override
     public void addEpic(Epic epic) {
         // проверяем пересечение эпика с задачами и подзадачами
-        boolean hasOverlap = epics.values().stream().anyMatch(existingEpic -> overlappingTask(epic, existingEpic)) ||
-                tasks.values().stream().anyMatch(existingTask -> overlappingTask(epic, existingTask)) ||
-                subtasks.values().stream().anyMatch(existingSubtask -> overlappingTask(epic, existingSubtask));
+        try {
+            boolean hasOverlap = epics.values().stream().anyMatch(existingEpic -> overlappingTask(epic, existingEpic)) ||
+                    tasks.values().stream().anyMatch(existingTask -> overlappingTask(epic, existingTask)) ||
+                    subtasks.values().stream().anyMatch(existingSubtask -> overlappingTask(epic, existingSubtask));
 
-        if (hasOverlap) {
-            System.out.println(" !!! Error: Эпик пересекается с другой задачей или подзадачей по времени !!!");
-            return;
+            if (hasOverlap) {
+                System.out.println(" !!! Error: Эпик пересекается с другой задачей или подзадачей по времени !!!");
+                return;
+            }
+            epic.setTaskId(generalId++);
+            epics.put(epic.getTaskId(), epic);
+            prioritizedTasks.add(epic);
+        } catch (Exception e) {
+            System.out.println("Ошибка при добавлении эпика: " + e.getMessage());
         }
-        epic.setTaskId(generalId++);
-        epics.put(epic.getTaskId(), epic);
-        prioritizedTasks.add(epic);
     }
 
     // Метод для добавления подзадачи
     @Override
     public void addSubtask(Subtask subtask) {
         // проверяем пересечение подзадачи с задачами и эпиками
-        boolean hasOverlap = tasks.values().stream().anyMatch(existingTask -> overlappingTask(subtask, existingTask)) ||
-                epics.values().stream().anyMatch(existingEpic -> overlappingTask(subtask, existingEpic)) ||
-                subtasks.values().stream().anyMatch(existingSubtask -> overlappingTask(subtask, existingSubtask));
+        try {
+            boolean hasOverlap = tasks.values().stream().anyMatch(existingTask -> overlappingTask(subtask, existingTask)) ||
+                    epics.values().stream().anyMatch(existingEpic -> overlappingTask(subtask, existingEpic)) ||
+                    subtasks.values().stream().anyMatch(existingSubtask -> overlappingTask(subtask, existingSubtask));
 
-        if (hasOverlap) {
-            System.out.println(" !!! Error: Подзадача пересекается с другой задачей или подзадачей по времени !!!");
-            return;
-        }
-        subtask.setTaskId(generalId++);
+            if (hasOverlap) {
+                System.out.println(" !!! Error: Подзадача пересекается с другой задачей или подзадачей по времени !!!");
+                return;
+            }
+            subtask.setTaskId(generalId++);
 
-        Epic epic = epics.get(subtask.getEpicId());
-        if (epic == null) {
-            System.out.println(" !!! Error: Epic не найден !!!");
-            return;
+            Epic epic = epics.get(subtask.getEpicId());
+            if (epic == null) {
+                System.out.println(" !!! Error: Epic не найден !!!");
+                return;
+            }
+            if (epic.getTaskId() == subtask.getTaskId()) {
+                System.out.println(" !!! Error: Epic нельзя добавить в самого себя в виде подзадачи !!!");
+                return;
+            }
+            epic.getSubtaskList().add(subtask.getTaskId());
+            subtasks.put(subtask.getTaskId(), subtask);
+            prioritizedTasks.add(subtask);
+            updateStatusEpic(epic);
+        } catch (Exception e) {
+            System.out.println("Ошибка при добавлении подзадачи: " + e.getMessage());
         }
-        if (epic.getTaskId() == subtask.getTaskId()) {
-            System.out.println(" !!! Error: Epic нельзя добавить в самого себя в виде подзадачи !!!");
-            return;
-        }
-        epic.getSubtaskList().add(subtask.getTaskId());
-        subtasks.put(subtask.getTaskId(), subtask);
-        prioritizedTasks.add(subtask);
-        updateStatusEpic(epic);
     }
 
     //  методы обновления
@@ -172,41 +184,53 @@ public class InMemoryTaskManager implements TaskManager {
     // методы удаления по идентификатору
     @Override
     public void removeTask(int id) {
-        Task task = tasks.remove(id);
-        if (task != null) {
-            prioritizedTasks.remove(task);
+        try {
+            Task task = tasks.remove(id);
+            if (task != null) {
+                prioritizedTasks.remove(task);
+            }
+            removeHistory(id);
+        } catch (Exception e) {
+            System.out.println("Ошибка при удалении подзадачи: " + e.getMessage());
         }
-        removeHistory(id);
     }
 
     @Override
     public void removeEpic(int id) {
-        Epic epic = epics.remove(id);
-        if (epic != null) {
-            for (Integer subtaskId : epic.getSubtaskList()) {
-                Subtask subtask = subtasks.remove(subtaskId);
-                if (subtask != null) {
-                    prioritizedTasks.remove(subtask);
-                    removeHistory(subtaskId);
+        try {
+            Epic epic = epics.remove(id);
+            if (epic != null) {
+                for (Integer subtaskId : epic.getSubtaskList()) {
+                    Subtask subtask = subtasks.remove(subtaskId);
+                    if (subtask != null) {
+                        prioritizedTasks.remove(subtask);
+                        removeHistory(subtaskId);
+                    }
                 }
+                prioritizedTasks.remove(epic);
             }
-            prioritizedTasks.remove(epic);
+            removeHistory(id);
+        } catch (Exception e) {
+            System.out.println("Ошибка при удалении эпика: " + e.getMessage());
         }
-        removeHistory(id);
     }
 
     @Override
     public void removeSubtask(int id) {
-        Subtask subtask = subtasks.remove(id);
-        if (subtask != null) {
-            prioritizedTasks.remove(subtask);
-            Epic epic = epics.get(subtask.getEpicId());
-            if (epic != null) {
-                epic.getSubtaskList().remove((Integer) id);
-                updateStatusEpic(epic);
+        try {
+            Subtask subtask = subtasks.remove(id);
+            if (subtask != null) {
+                prioritizedTasks.remove(subtask);
+                Epic epic = epics.get(subtask.getEpicId());
+                if (epic != null) {
+                    epic.getSubtaskList().remove((Integer) id);
+                    updateStatusEpic(epic);
+                }
             }
+            removeHistory(id);
+        } catch (Exception e) {
+            System.out.println("Ошибка при удалении подзадачи: " + e.getMessage());
         }
-        removeHistory(id);
     }
 
     // методы удаления всех задач

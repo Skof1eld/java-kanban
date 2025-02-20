@@ -6,7 +6,7 @@ import java.util.Objects;
 
 public class Task {
     private static int counter = 0;
-    private final String nameOfTheTask;
+    private String nameOfTheTask;
     private final String description;
     private Status status;
     private int taskId;
@@ -50,8 +50,8 @@ public class Task {
         return taskId;
     }
 
-    public void setTaskId(int taskId) {
-        this.taskId = taskId;
+    public void setNameOfTheTask(String name) {
+        this.nameOfTheTask = name;
     }
 
     public Status getStatus() {
@@ -68,6 +68,10 @@ public class Task {
 
     public String getNameOfTheTask() {
         return nameOfTheTask;
+    }
+
+    public void setTaskId(int taskId) {
+        this.taskId = taskId;
     }
 
     @Override
