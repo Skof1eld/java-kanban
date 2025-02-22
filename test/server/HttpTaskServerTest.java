@@ -162,4 +162,18 @@ public class HttpTaskServerTest {
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
         assertEquals(200, response.statusCode());
     }
+
+    // Проверка на ошибку 500
+    @Test
+    void checkError500() throws IOException, InterruptedException {
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create("http://localhost:8080/error-500"))
+                .GET()
+                .build();
+
+        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+        assertEquals(500, response.statusCode());
+        assertEquals("Внутренняя ошибка сервера.", response.body());
+    }
 }

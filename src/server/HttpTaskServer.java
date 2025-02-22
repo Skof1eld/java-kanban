@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
 public class HttpTaskServer {
     private static final int PORT = 8080;
     private final HttpServer server;
-    final TaskManager taskManager;
+    private final TaskManager taskManager;
     private final Gson gson = new GsonBuilder()
             .registerTypeAdapter(Duration.class, new DurationAdapter())
             .registerTypeAdapter(LocalDateTime.class, new LocalDateTimeAdapter())
@@ -27,11 +27,14 @@ public class HttpTaskServer {
     }
 
     private void initializeHandlers() {
-        server.createContext("/tasks", new TaskHandler(gson));
-        server.createContext("/subtasks", new SubtaskHandler(gson));
-        server.createContext("/epics", new EpicHandler(gson));
-        server.createContext("/history", new HistoryHandler(gson));
-        server.createContext("/prioritized", new PrioritizedHandler(gson));
+        server.createContext("/tasks", new TaskHandler(taskManager, gson));
+        server.createContext("/subtasks", new SubtaskHandler(taskManager, gson));
+        server.createContext("/epics", new EpicHandler(taskManager, gson));
+        server.createContext("/history", new HistoryHandler(taskManager, gson));
+        server.createContext("/prioritized", new PrioritizedHandler(taskManager, gson));
+
+        // * Для тестирования ошибки, ее имитации
+        server.createContext("/error-500", exchange -> new BaseHttpHandler(taskManager).sendInternalError(exchange));
     }
 
     public void start() {

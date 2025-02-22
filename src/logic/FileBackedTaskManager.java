@@ -216,11 +216,4 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         manager.taskFromString(file);
         return manager;
     }
-
-    // Cобственное непроверяемое исключение ManagerSaveException
-    public static class ManagerSaveException extends RuntimeException {
-        public ManagerSaveException(String message, Throwable cause) {
-            super(message, cause);
-        }
-    }
 }

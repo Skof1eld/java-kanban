@@ -1,11 +1,18 @@
 package server;
 
 import com.sun.net.httpserver.HttpExchange;
+import logic.TaskManager;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
 public class BaseHttpHandler {
+    protected final TaskManager taskManager;     // перенес TaskManager в базовый класс
+
+    public BaseHttpHandler(TaskManager taskManager) {
+        this.taskManager = taskManager;
+    }
+
     protected void sendText(HttpExchange exchange, String text, int statusCode) throws IOException {
         byte[] response = text.getBytes(StandardCharsets.UTF_8);
         exchange.getResponseHeaders().add("Content-Type", "application/json;charset=utf-8");

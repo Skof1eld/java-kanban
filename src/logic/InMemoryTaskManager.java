@@ -25,11 +25,8 @@ public class InMemoryTaskManager implements TaskManager {
     public void addTask(Task task) {
         // проверяем, не пересекается ли добавляемая задача с уже существующими
         try {
-            boolean hasOverlap = tasks.values().stream().anyMatch(existingTask -> overlappingTask(task, existingTask));
-
-            if (hasOverlap) {
-                System.out.println(" !!! Error: Задача пересекается с другой задачей по времени !!!");
-                return;
+            if (isOverlap(task)) {
+                throw new ManagerSaveException("!!! Error: Задача пересекается с другой задачей по времени !!!", null);
             }
             task.setTaskId(generalId++);
             tasks.put(task.getTaskId(), task);
@@ -44,12 +41,8 @@ public class InMemoryTaskManager implements TaskManager {
     public void addEpic(Epic epic) {
         // проверяем пересечение эпика с задачами и подзадачами
         try {
-            boolean hasOverlap = epics.values().stream().anyMatch(existingEpic -> overlappingTask(epic, existingEpic)) ||
-                    tasks.values().stream().anyMatch(existingTask -> overlappingTask(epic, existingTask)) ||
-                    subtasks.values().stream().anyMatch(existingSubtask -> overlappingTask(epic, existingSubtask));
-
-            if (hasOverlap) {
-                System.out.println(" !!! Error: Эпик пересекается с другой задачей или подзадачей по времени !!!");
+            if (isOverlap(epic)) {
+                System.out.println("!!! Error: Эпик пересекается с другой задачей или подзадачей по времени !!!");
                 return;
             }
             epic.setTaskId(generalId++);
@@ -65,13 +58,8 @@ public class InMemoryTaskManager implements TaskManager {
     public void addSubtask(Subtask subtask) {
         // проверяем пересечение подзадачи с задачами и эпиками
         try {
-            boolean hasOverlap = tasks.values().stream().anyMatch(existingTask -> overlappingTask(subtask, existingTask)) ||
-                    epics.values().stream().anyMatch(existingEpic -> overlappingTask(subtask, existingEpic)) ||
-                    subtasks.values().stream().anyMatch(existingSubtask -> overlappingTask(subtask, existingSubtask));
-
-            if (hasOverlap) {
-                System.out.println(" !!! Error: Подзадача пересекается с другой задачей или подзадачей по времени !!!");
-                return;
+            if (isOverlap(subtask)) {
+                throw new ManagerSaveException("!!! Error: Задача пересекается с другой задачей по времени !!!", null);
             }
             subtask.setTaskId(generalId++);
 
@@ -384,5 +372,11 @@ public class InMemoryTaskManager implements TaskManager {
             }
         }
         epic.setEndTime(lastEnd);
+    }
+
+    public boolean isOverlap(Task task) {
+        return tasks.values().stream().anyMatch(existingTask -> overlappingTask(task, existingTask)) ||
+                epics.values().stream().anyMatch(existingEpic -> overlappingTask(task, existingEpic)) ||
+                subtasks.values().stream().anyMatch(existingSubtask -> overlappingTask(task, existingSubtask));
     }
 }

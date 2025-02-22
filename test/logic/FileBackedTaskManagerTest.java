@@ -43,6 +43,6 @@ public class FileBackedTaskManagerTest extends TaskManagerTest<FileBackedTaskMan
     public void testLoadFromFileWithInvalidFile() {
         File noFile = new File("the_file_does_not_exist.csv");   // файл не существует
 
-        assertThrows(FileBackedTaskManager.ManagerSaveException.class, () -> FileBackedTaskManager.loadFromFile(noFile));
+        assertThrows(ManagerSaveException.class, () -> FileBackedTaskManager.loadFromFile(noFile));
     }
 }

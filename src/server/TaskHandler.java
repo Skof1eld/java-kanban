@@ -3,7 +3,6 @@ package server;
 import com.google.gson.Gson;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
-import logic.Managers;
 import logic.TaskManager;
 import model.Task;
 
@@ -13,26 +12,25 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 public class TaskHandler extends BaseHttpHandler implements HttpHandler {
-    private final TaskManager taskManager;
     private final Gson gson;
 
-    public TaskHandler(Gson gson) {
-        this.taskManager = Managers.getDefault();
+    public TaskHandler(TaskManager taskManager, Gson gson) {
+        super(taskManager);
         this.gson = gson;
     }
 
     @Override
     public void handle(HttpExchange exchange) throws IOException {
         try {
-            String method = exchange.getRequestMethod();
+            HttpMethod method = HttpMethod.fromString(exchange.getRequestMethod());
             switch (method) {
-                case "GET":
+                case GET:
                     handleGetTasks(exchange);
                     break;
-                case "POST":
+                case POST:
                     handlePostTask(exchange);
                     break;
-                case "DELETE":
+                case DELETE:
                     handleDeleteTask(exchange);
                     break;
                 default:
