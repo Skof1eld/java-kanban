@@ -5,20 +5,20 @@ import java.time.LocalDateTime;
 import java.util.Objects;
 
 public class Subtask extends Task {
-    private int getEpicId;
+    private int epicId;
 
     public Subtask(String nameOfTheTask, String description, Status status, Duration duration, LocalDateTime startTime, int getEpicId) {
         super(nameOfTheTask, description, status, duration, startTime);
-        this.getEpicId = getEpicId;
+        this.epicId = getEpicId;
 
     }
 
     public int getEpicId() {
-        return getEpicId;
+        return epicId;
     }
 
     public void setEpicId(int getEpicId) {
-        this.getEpicId = getEpicId;
+        this.epicId = getEpicId;
     }
 
     @Override
@@ -26,18 +26,18 @@ public class Subtask extends Task {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Subtask subtask = (Subtask) o;
-        return getEpicId == subtask.getEpicId;
+        return epicId == subtask.epicId;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(getEpicId);
+        return Objects.hashCode(epicId);
     }
 
     @Override
     public String toString() {
         return "Subtask{" +
-                "subtaskId=" + getEpicId +
+                "epicId=" + epicId +
                 ", nameOfTheTask='" + getNameOfTheTask() + '\'' +
                 ", description='" + getDescription() + '\'' +
                 ", status=" + getStatus() +

@@ -6,6 +6,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import static model.TypeTask.EPIC;
+
 public class Epic extends Task {
     private List<Integer> subtaskList;
     private LocalDateTime endTime;
@@ -48,6 +50,7 @@ public class Epic extends Task {
                 ", duration=" + getDuration() +
                 ", startTime=" + getStartTime() +
                 ", endTime=" + getEndTime() +
+                ", type=" + EPIC +
                 '}';
     }
 }

@@ -28,9 +28,9 @@ public class FileBackedTaskManagerTest extends TaskManagerTest<FileBackedTaskMan
     @Test
     public void saveAndLoadFromFile() {
         Task task = new Task("Task 1", "Description", Status.NEW, Duration.ofMinutes(30), LocalDateTime.now());
-        taskManager.addTask(task);
+        TaskManager.addTask(task);
 
-        assertDoesNotThrow(() -> taskManager.save());
+        assertDoesNotThrow(() -> TaskManager.save());
 
         FileBackedTaskManager loadedManager = FileBackedTaskManager.loadFromFile(file);
         Task loadedTask = loadedManager.getTask(task.getTaskId());
@@ -43,8 +43,6 @@ public class FileBackedTaskManagerTest extends TaskManagerTest<FileBackedTaskMan
     public void testLoadFromFileWithInvalidFile() {
         File noFile = new File("the_file_does_not_exist.csv");   // файл не существует
 
-        assertThrows(FileBackedTaskManager.ManagerSaveException.class, () -> {
-            FileBackedTaskManager.loadFromFile(noFile);
-        });
+        assertThrows(ManagerSaveException.class, () -> FileBackedTaskManager.loadFromFile(noFile));
     }
 }
